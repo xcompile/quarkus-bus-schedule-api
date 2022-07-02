@@ -28,6 +28,8 @@ import com.hkc.nlb.remote.NLBApiService;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectMock;
+import static org.hamcrest.Matchers.is;
+
 @QuarkusTest
 @TestHTTPEndpoint(BusScheduleResource.class)
 public class BusScheduleTest {
@@ -38,13 +40,14 @@ public class BusScheduleTest {
     @InjectMock
     @RestClient
     NLBApiService api;
-    
+
     @BeforeEach
     public void setup() {
-        
+
         CompletionStage<Set<Route>> cs = CompletableFuture.<Set<Route>>supplyAsync(() -> loadSampleData());
         Mockito.when(api.routes()).thenReturn(cs);
     }
+
     private Set<Route> loadSampleData() {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("route.snapshot.json");
         try {
@@ -58,13 +61,26 @@ public class BusScheduleTest {
     @Test
     void requestingAListOfBusRoutes() {
         given().when()
-        .get("/")
-        .then()
-        .statusCode(200);
-        // .body("$.size()",greaterThan(0));    
+                .get("/")
+                .then()
+                .statusCode(200);
+        // .body("$.size()",greaterThan(0));
     }
 
+    @Test
+    void ifSearchingForRouteInEnglishAlsoPartialMatchesAreReturned() {
 
+        given().queryParam("q", "Lo").when()
+        .get("search")
+        .then()
+        .statusCode(200)
+        .body("$.size()",is(3),
+        "[0].routeId",is("75"),
+        "[1].routeId",is("37"),
+        "[2].routeId",is("38")
+        );
+        
+        
+    }
 
-    
 }
