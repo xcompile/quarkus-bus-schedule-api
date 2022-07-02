@@ -1,8 +1,9 @@
 package com.hkc.nlb;
 
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CompletionStage;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -26,17 +27,17 @@ import io.smallrye.mutiny.Uni;
 @Path("routes")
 public class BusScheduleResource {
 
-    NLBApiService nlbService;
+    NLBApiService NLBApi;
 
     @Inject
     BusScheduleResource(
             @RestClient NLBApiService nlbService) {
-        this.nlbService = nlbService;
+        this.NLBApi = nlbService;
     }
 
     @GET
-    public CompletionStage<Set<Route>> all() {
-        return nlbService.routes();
+    public Uni<Set<Route>> all() {
+        return NLBApi.routes();
 
     }
 
@@ -44,16 +45,18 @@ public class BusScheduleResource {
     @Path("search")
     public Uni<Set<Route>> search(@QueryParam("q") String query) {
 
-        
         final Predicate<Route> routeFilter = route -> route.names.english.toLowerCase().contains(query.toLowerCase());
+        final Comparator<Route> idComparator = (route1, route2) -> route1.id.compareTo(route2.id);
 
-        return Uni.createFrom()
-        .completionStage(nlbService.routes())
-        .onItem()
-        .transform(
-            (item) -> item.stream()
-            .filter(routeFilter)
-            .collect(Collectors.toSet())
-        );
+        return NLBApi.routes()
+                .onItem()
+                .transform(
+                    // preserve order to simplify test
+                        (item) -> new LinkedHashSet<>(
+                                item.stream()
+                                        .filter(routeFilter)
+                                        .sorted(idComparator)
+                                        .collect(Collectors.toList())));
+
     }
 }

@@ -28,6 +28,8 @@ import com.hkc.nlb.remote.NLBApiService;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectMock;
+import io.smallrye.mutiny.Uni;
+
 import static org.hamcrest.Matchers.is;
 
 @QuarkusTest
@@ -44,7 +46,7 @@ public class BusScheduleTest {
     @BeforeEach
     public void setup() {
 
-        CompletionStage<Set<Route>> cs = CompletableFuture.<Set<Route>>supplyAsync(() -> loadSampleData());
+        Uni<Set<Route>> cs = Uni.createFrom().item(loadSampleData());
         Mockito.when(api.routes()).thenReturn(cs);
     }
 
@@ -75,9 +77,9 @@ public class BusScheduleTest {
         .then()
         .statusCode(200)
         .body("$.size()",is(3),
-        "[0].routeId",is("75"),
-        "[1].routeId",is("37"),
-        "[2].routeId",is("38")
+        "[0].routeId",is("37"),
+        "[1].routeId",is("38"),
+        "[2].routeId",is("75")
         );
         
         
