@@ -1,12 +1,10 @@
 package com.hkc.nlb;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.is;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 import javax.inject.Inject;
 
@@ -29,8 +27,6 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectMock;
 import io.smallrye.mutiny.Uni;
-
-import static org.hamcrest.Matchers.is;
 
 @QuarkusTest
 @TestHTTPEndpoint(BusScheduleResource.class)
@@ -85,4 +81,15 @@ public class BusScheduleTest {
         
     }
 
+    @Test
+    void ifSearchingForRouteWithBlankQueryReturnHTTP400() {
+
+        
+        given().queryParam("q", "").when()
+        .get("search")
+        .then()
+        .statusCode(400);
+        
+        
+    }
 }
